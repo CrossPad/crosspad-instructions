@@ -1,0 +1,17 @@
+{
+  "name": "Instructions",
+  "id": "instructions",
+  "version": "0.1.0",
+  "description": "Markdown-based instructions and help viewer",
+  "category": "tools",
+  "icon": "help.png",
+  "component_path": "components/crosspad-instructions",
+  "platforms": ["pc"],
+  "requires": {
+    "crosspad-core": ">=0.3.0",
+    "crosspad-gui": ">=0.2.0"
+  },
+  "changelog": [
+    "0.1.0: Initial release — markdown rendering, file auto-discovery"
+  ]
+}
