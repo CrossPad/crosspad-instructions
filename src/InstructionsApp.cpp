@@ -6,42 +6,39 @@
 #include "lvgl.h"
 
 #include <cstdio>
+#include <cstring>
 #include <string>
-#include <filesystem>
-
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#undef ERROR
-#endif
 
 /* ── Markdown file locator ───────────────────────────────────────────── */
 
+static bool fileExists(const char* path)
+{
+    FILE* f = fopen(path, "r");
+    if (f) { fclose(f); return true; }
+    return false;
+}
+
 static std::string findInstructionsFile()
 {
-    namespace fs = std::filesystem;
-
     const char* candidates[] = {
+#if defined(ESP_PLATFORM)
+        // ESP-IDF: LittleFS or SD
+        "A:docs/instructions.md",
+        "/sdcard/docs/instructions.md",
+#elif defined(ARDUINO)
+        // Arduino: LittleFS
+        "I:/docs/instructions.md",
+        "/littlefs/docs/instructions.md",
+#else
+        // PC / Desktop
         "docs/instructions.md",
         "../docs/instructions.md",
+#endif
     };
 
     for (auto& c : candidates) {
-        std::error_code ec;
-        if (fs::exists(c, ec)) return fs::canonical(c, ec).string();
+        if (fileExists(c)) return c;
     }
-
-#ifdef _WIN32
-    char exePath[MAX_PATH] = {};
-    GetModuleFileNameA(NULL, exePath, MAX_PATH);
-    fs::path exeDir = fs::path(exePath).parent_path();
-    {
-        auto p = exeDir / ".." / "docs" / "instructions.md";
-        std::error_code ec;
-        if (fs::exists(p, ec)) return fs::canonical(p, ec).string();
-    }
-#endif
 
     return {};
 }
@@ -79,7 +76,6 @@ static lv_obj_t* lv_CreateInstructions(lv_obj_t* parent, App* a)
         lv_obj_set_style_text_color(lbl, lv_color_hex(0xFF4444), 0);
     } else {
         crosspad_gui::markdown_render_file(content, path);
-        printf("[Instructions] Loaded from %s\n", path.c_str());
     }
 
     return container;
@@ -90,16 +86,8 @@ static void lv_DestroyInstructions(lv_obj_t* obj)
     (void)obj;
 }
 
-void _register_Instructions_app() {
-    static char icon_path[256];
-    snprintf(icon_path, sizeof(icon_path), "%sinfo.png",
-             crosspad_gui::getGuiPlatform().assetPathPrefix());
-    static const crosspad::AppEntry entry = {
-        "Help", icon_path,
-        lv_CreateInstructions, lv_DestroyInstructions,
-        nullptr, nullptr, nullptr, nullptr, 0
-    };
-    crosspad::AppRegistry::getInstance().registerApp(entry);
-}
+REGISTER_APP(Instructions, nullptr, "info.png",
+             lv_CreateInstructions, lv_DestroyInstructions,
+             nullptr, nullptr, nullptr, 0)
 
 #endif // USE_LVGL

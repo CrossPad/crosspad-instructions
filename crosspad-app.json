@@ -1,17 +1,18 @@
 {
   "name": "Instructions",
   "id": "instructions",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Markdown-based instructions and help viewer",
   "category": "tools",
-  "icon": "help.png",
+  "icon": "info.png",
   "component_path": "components/crosspad-instructions",
-  "platforms": ["pc"],
+  "platforms": ["esp-idf", "arduino", "pc"],
   "requires": {
     "crosspad-core": ">=0.3.0",
     "crosspad-gui": ">=0.2.0"
   },
   "changelog": [
+    "0.2.0: Cross-platform support — ESP-IDF, Arduino, PC",
     "0.1.0: Initial release — markdown rendering, file auto-discovery"
   ]
 }

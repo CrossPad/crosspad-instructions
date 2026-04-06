@@ -1,0 +1,12 @@
+{
+    "name": "crosspad-instructions",
+    "version": "0.2.0",
+    "description": "CrossPad Instructions App — cross-platform markdown help viewer",
+    "dependencies": {
+        "crosspad-core": "*",
+        "crosspad-gui": "*"
+    },
+    "build": {
+        "appLibrary": true
+    }
+}
