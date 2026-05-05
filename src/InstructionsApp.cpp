@@ -3,6 +3,8 @@
 #include "crosspad/app/AppRegistrar.hpp"
 #include "crosspad-gui/platform/IGuiPlatform.h"
 #include "crosspad-gui/components/markdown_view.h"
+#include "crosspad-gui/styles/styles.h"
+#include "crosspad-gui/app/App.hpp"
 #include "lvgl.h"
 
 #include <cstdio>
@@ -34,6 +36,14 @@ static bool fileExists(const char* path)
 
 static std::string findInstructionsFile()
 {
+    // First try the platform's asset prefix (works on any platform that
+    // mounts assets at a known path, e.g. "/assets/" on ESP-IDF).
+    const char* prefix = crosspad_gui::getGuiPlatform().assetPathPrefix();
+    if (prefix && prefix[0]) {
+        std::string p = std::string(prefix) + "docs/instructions.md";
+        if (fileExists(p.c_str())) return p;
+    }
+
     const char* candidates[] = {
 #if defined(ESP_PLATFORM)
         // ESP-IDF: LittleFS or SD
@@ -86,7 +96,12 @@ static std::string findInstructionsFile()
 
 static lv_obj_t* lv_CreateInstructions(lv_obj_t* parent, App* a)
 {
+#if defined(ESP_PLATFORM) || defined(ARDUINO)
+    constexpr int BACK_BAR_H = 28;
+#else
     (void)a;
+    constexpr int BACK_BAR_H = 0;
+#endif
 
     lv_obj_t* container = lv_obj_create(parent);
     lv_obj_set_size(container, lv_obj_get_content_width(parent),
@@ -98,7 +113,9 @@ static lv_obj_t* lv_CreateInstructions(lv_obj_t* parent, App* a)
     lv_obj_center(container);
 
     lv_obj_t* content = lv_obj_create(container);
-    lv_obj_set_size(content, LV_PCT(100), LV_PCT(100));
+    lv_obj_set_size(content, LV_PCT(100),
+                    lv_obj_get_content_height(parent) - BACK_BAR_H);
+    lv_obj_align(content, LV_ALIGN_TOP_MID, 0, 0);
     lv_obj_set_style_bg_color(content, lv_color_black(), 0);
     lv_obj_set_style_border_width(content, 0, 0);
     lv_obj_set_style_pad_all(content, 8, 0);
@@ -118,12 +135,38 @@ static lv_obj_t* lv_CreateInstructions(lv_obj_t* parent, App* a)
         printf("[Instructions] Loaded from %s\n", path.c_str());
     }
 
+#if defined(ESP_PLATFORM) || defined(ARDUINO)
+    // Back button + encoder routing for embedded launcher exit
+    lv_obj_t* backBtn = lv_button_create(container);
+    lv_obj_set_size(backBtn, 70, BACK_BAR_H - 4);
+    lv_obj_align(backBtn, LV_ALIGN_BOTTOM_LEFT, 6, -2);
+    lv_obj_add_style(backBtn, &styleButton, 0);
+    lv_obj_add_style(backBtn, &styleButtonPressed, LV_STATE_PRESSED);
+    lv_obj_t* backLabel = lv_label_create(backBtn);
+    lv_label_set_text(backLabel, "Back");
+    lv_obj_center(backLabel);
+    lv_obj_add_event_cb(backBtn, [](lv_event_t* e) {
+        auto* app = static_cast<App*>(lv_event_get_user_data(e));
+        if (app) app->destroyAppAsync();
+    }, LV_EVENT_CLICKED, a);
+
+    lv_indev_t* nav = crosspad_gui::getGuiPlatform().getNavigationEncoder();
+    if (nav) {
+        static lv_group_t* s_grp = nullptr;
+        if (s_grp) lv_group_delete(s_grp);
+        s_grp = lv_group_create();
+        lv_group_add_obj(s_grp, backBtn);
+        lv_group_focus_obj(backBtn);
+        lv_indev_set_group(nav, s_grp);
+    }
+#endif
+
     return container;
 }
 
 static void lv_DestroyInstructions(lv_obj_t* obj)
 {
-    (void)obj;
+    if (obj) lv_obj_delete_async(obj);
 }
 
 REGISTER_APP(Instructions, nullptr, "info.png",
