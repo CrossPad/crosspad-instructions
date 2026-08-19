@@ -94,6 +94,11 @@ static std::string findInstructionsFile()
 
 /* ── App create / destroy ────────────────────────────────────────────── */
 
+// Owned by this file, not by create(): the group outlives the widgets it holds
+// unless destroy() deletes it, and deleting it later — on the next create —
+// walked a list of freed objects.
+static lv_group_t* s_encoderGroup = nullptr;
+
 static lv_obj_t* lv_CreateInstructions(lv_obj_t* parent, App* a)
 {
 #if defined(ESP_PLATFORM) || defined(ARDUINO)
@@ -152,12 +157,11 @@ static lv_obj_t* lv_CreateInstructions(lv_obj_t* parent, App* a)
 
     lv_indev_t* nav = crosspad_gui::getGuiPlatform().getNavigationEncoder();
     if (nav) {
-        static lv_group_t* s_grp = nullptr;
-        if (s_grp) lv_group_delete(s_grp);
-        s_grp = lv_group_create();
-        lv_group_add_obj(s_grp, backBtn);
+        if (s_encoderGroup) lv_group_delete(s_encoderGroup);
+        s_encoderGroup = lv_group_create();
+        lv_group_add_obj(s_encoderGroup, backBtn);
         lv_group_focus_obj(backBtn);
-        lv_indev_set_group(nav, s_grp);
+        lv_indev_set_group(nav, s_encoderGroup);
     }
 #endif
 
@@ -166,6 +170,12 @@ static lv_obj_t* lv_CreateInstructions(lv_obj_t* parent, App* a)
 
 static void lv_DestroyInstructions(lv_obj_t* obj)
 {
+    // Before the widgets go: the group holds pointers to them, and AppBase
+    // restores the launcher's group on the indev right after this returns.
+    if (s_encoderGroup) {
+        lv_group_delete(s_encoderGroup);
+        s_encoderGroup = nullptr;
+    }
     if (obj) lv_obj_delete_async(obj);
 }
 
