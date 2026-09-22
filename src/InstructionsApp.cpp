@@ -181,6 +181,6 @@ static void lv_DestroyInstructions(lv_obj_t* obj)
 
 REGISTER_APP(Instructions, nullptr, "info.png",
              lv_CreateInstructions, lv_DestroyInstructions,
-             nullptr, nullptr, nullptr, 0)
+             nullptr, nullptr, nullptr, 0, true)
 
 #endif // USE_LVGL
