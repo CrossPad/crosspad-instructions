@@ -1,6 +1,7 @@
 {
     "name": "crosspad-instructions",
     "version": "0.2.0",
+    "license": "GPL-3.0-or-later",
     "description": "CrossPad Instructions App — cross-platform markdown help viewer",
     "dependencies": {
         "crosspad-core": "*",
