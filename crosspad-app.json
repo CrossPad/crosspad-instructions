@@ -8,11 +8,11 @@
   "component_path": "components/crosspad-instructions",
   "platforms": ["esp-idf", "arduino", "pc"],
   "requires": {
-    "crosspad-core": "^2.0.0",
-    "crosspad-gui": "^2.0.0"
+    "crosspad-core": ">=1.70.0,<3.0.0",
+    "crosspad-gui": ">=1.28.0,<3.0.0"
   },
   "changelog": [
-    "0.3.0: the launcher recolours the icon; the encoder group is deleted in destroy, not on the next create, which walked a list of freed objects; requires core 2.0 and gui 2.0",
+    "0.3.0: the launcher recolours the icon; the encoder group is deleted in destroy, not on the next create, which walked a list of freed objects; builds on core 1.70+/gui 1.28+ and on core/gui 2.x (>=1.70.0,<3.0.0 and >=1.28.0,<3.0.0) for the merge window",
     "0.2.0: Cross-platform support — ESP-IDF, Arduino, PC",
     "0.1.0: Initial release — markdown rendering, file auto-discovery"
   ]
